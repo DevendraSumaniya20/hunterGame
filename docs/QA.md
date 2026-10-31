@@ -162,4 +162,4 @@ Run with `DEBUG=1`; watch `curl <server>:3000/debug/rooms`.
   launch flow accepts it. A server on the internet would not trigger it.
 - Android E2E: right after closing team chat, Maestro's first tap on "Leave game" is sometimes not
   registered (a manual tap works). The flow retries it; worth checking by hand on a real Android phone.
-- Player ids are random, not cryptographic (`Math.random`); fine for a game, use a CSPRNG for real accounts.
+- Installs from before the server-issued ids keep their old `Math.random` id; new installs get CSPRNG ids.

@@ -49,6 +49,12 @@ e2e/multi.sh HOST RAVI MIA             # 3-simulator game incl. helper switch + 
 e2e/live_host.sh                       # simulator hosts a room for a real phone (prints ROOM_CODE)
 ```
 
+## Sharing / production
+
+See `DEPLOY.md`. Debug builds use `DEV_HOST` (LAN); release builds use `PROD_SERVER_URL` (https) in
+`app/src/config.ts`. Server ships via the root `Dockerfile` + `fly.toml` (one machine, volume at /data,
+no DEBUG, TRUST_PROXY=1). New installs get their secret id from `POST /api/players` (CSPRNG, rate-limited).
+
 ## Rules for changes
 
 - Contracts live in `shared/`; change them first, then server, then app.
@@ -90,5 +96,5 @@ e2e/live_host.sh                       # simulator hosts a room for a real phone
 ## Status (2026-10-31)
 
 Done: game loop, map/radar, helpers, history/stats/leaderboards, clans, team chat, HIG UI, 3-device E2E.
-Open: Android Maps key; rebuild + reinstall on the user's iPhone (new native libs); background location;
-cryptographic player ids for real accounts.
+Open: deploy (needs the user's Fly/Railway account); Android Maps key; rebuild + reinstall on the user's
+iPhone (new native libs); background location. Docker image not test-built locally (no Docker on this Mac).

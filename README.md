@@ -35,6 +35,8 @@ cd app && npx react-native run-ios  # or run-android
 Set your computer's LAN IP in `app/src/config.ts` so phones on the same Wi-Fi can reach the server.
 Android maps need a Google Maps key: add `MAPS_API_KEY=...` to `app/android/local.properties` (git-ignored).
 
+To share the game with other people (deploy the server, build release apps) see [DEPLOY.md](DEPLOY.md).
+
 ## Test
 
 ```bash

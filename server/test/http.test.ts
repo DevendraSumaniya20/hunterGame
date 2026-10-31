@@ -116,3 +116,16 @@ test('clan lifecycle over the API: create, share code, search, join, tag in game
   assert.equal((await get(`/api/clans/${tag}`)).status, 404, 'last member leaving deletes the clan');
   assert.equal((await send('DELETE', '/api/players/clan-owner-01/clan')).status, 404);
 });
+
+test('POST /api/players issues unique secure ids, then rate-limits', async () => {
+  const ids = new Set<string>();
+  for (let i = 0; i < 20; i++) {
+    const r = await send('POST', '/api/players');
+    assert.equal(r.status, 200);
+    assert.match(r.body.id, /^p-[\w-]{32}$/);
+    ids.add(r.body.id);
+  }
+  assert.equal(ids.size, 20);
+  const limited = await send('POST', '/api/players');
+  assert.equal(limited.status, 429);
+});

@@ -1,7 +1,9 @@
+import { randomBytes } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Board, PLAYER_COLORS, Period, PlayerColor } from '@hunt/shared';
 import { ClanError, ClanRepository } from '../data/ClanRepository';
 import type { GameRepository } from '../data/GameRepository';
+import { clientIp, createRateLimiter } from './rateLimit';
 
 const PLAYER_ID = /^[\w-]{8,64}$/;
 const MAX_BODY_BYTES = 1024;
@@ -16,7 +18,20 @@ class HttpError extends Error {
 
 /** REST API under /api. Returns false when the request is not an API route. */
 export function createApi(repo: GameRepository, clans: ClanRepository) {
+  // Per-IP limits: general API use, and new player ids (cheap to call, so tighter).
+  const apiLimit = createRateLimiter({ windowMs: 60_000, max: 120 });
+  const idLimit = createRateLimiter({ windowMs: 60 * 60_000, max: 20 });
+
   const routes: [string, RegExp, Handler][] = [
+    // New secret player id from a CSPRNG. The app asks once per install and stores it.
+    [
+      'POST',
+      /^\/api\/players$/,
+      (_m, _u, req) => {
+        if (!idLimit.hit(clientIp(req))) throw new HttpError(429, 'Too many requests, try again later');
+        return { id: `p-${randomBytes(24).toString('base64url')}` };
+      },
+    ],
     ['GET', /^\/api\/players\/([^/]+)$/, m => repo.profile(playerId(m[1]))],
     [
       'PUT',
@@ -91,6 +106,7 @@ export function createApi(repo: GameRepository, clans: ClanRepository) {
     if (!url.pathname.startsWith('/api/')) return false;
     const route = routes.find(([method, re]) => method === req.method && re.test(url.pathname));
     try {
+      if (!apiLimit.hit(clientIp(req))) throw new HttpError(429, 'Too many requests, slow down');
       if (!route) throw new HttpError(404, 'Not found');
       const data = await route[2](url.pathname.match(route[1])!, url, req);
       send(res, 200, data);
