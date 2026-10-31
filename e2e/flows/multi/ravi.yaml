@@ -45,6 +45,17 @@ appId: com.dsumniya.huntinggame
 - assertVisible: "Hana caught you"
 - assertVisible: "1 runner left. Catch them!"
 - takeScreenshot: e2e/screens/multi_4_ravi_helper
+# Now a helper: chat switched to the hunters, with their earlier messages.
+- tapOn:
+    id: chat-button
+- assertVisible:
+    id: chat-title
+    text: "Hunter team"
+- assertVisible: "Ravi is north.*"
+- assertVisible: "You were caught.*"
+- takeScreenshot: e2e/screens/multi_4b_ravi_hunter_chat
+- tapOn:
+    id: chat-done
 # Helpers see runners on the map: go get Mia.
 - extendedWaitUntil:   # pause: let the other devices catch up
     visible: "__never__"

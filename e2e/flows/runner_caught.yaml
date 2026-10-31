@@ -35,6 +35,23 @@ appId: com.dsumniya.huntinggame
     id: waiting-text
 - assertVisible:
     id: player-BotHunter
+# Team chat in the lobby: runners see runner chat only.
+- tapOn:
+    id: chat-button
+- assertVisible:
+    id: chat-title
+    text: "Runner team"
+- tapOn:
+    id: chat-input
+- inputText: "hello runners"
+- tapOn: "Send"
+- extendedWaitUntil:
+    visible: "hello runners.*"
+    timeout: 5000
+- assertNotVisible: ".*BOT HUNTER SECRET.*"
+- takeScreenshot: e2e/screens/chat_runner
+- tapOn:
+    id: chat-done
 # Bot starts 3 s after we join, head start is 5 s.
 - extendedWaitUntil:
     visible: "Run! Get as far away as you can."

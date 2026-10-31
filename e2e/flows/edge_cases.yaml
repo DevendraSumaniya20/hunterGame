@@ -66,12 +66,31 @@ appId: com.dsumniya.huntinggame
 - assertVisible:
     id: room-code
 - assertVisible: "Waiting for runners"
+# Lobby chat: the host is alone on the hunter team.
+- tapOn:
+    id: chat-button
+- assertVisible:
+    id: chat-title
+    text: "Hunter team"
+- tapOn:
+    id: chat-input
+- inputText: "testing chat"
+- tapOn: "Send"
+- extendedWaitUntil:
+    visible: ".*testing chat.*"
+    timeout: 5000
+- tapOn:
+    id: chat-done
+- waitForAnimationToEnd  # sheet and keyboard slide away
 - copyTextFrom:
     id: room-code
-- tapOn:
-    id: leave-button
-- assertVisible:
-    id: create-button
+- retry:  # Android: first tap after closing the chat sheet is sometimes dropped (see docs/QA.md)
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: leave-button
+      - assertVisible:
+          id: create-button
 # Name is remembered for the next game.
 - assertVisible:
     id: name-input

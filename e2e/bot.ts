@@ -22,6 +22,7 @@ const log = (...a: unknown[]) => console.log(`[bot:${mode}]`, ...a);
 
 socket.on('connect_error', e => log('connect error', e.message));
 socket.on('game:caught', e => log(`CAUGHT ${e.runnerName} by ${e.byName}`));
+socket.on('chat:message', m => log(`CHAT ${m.team} ${m.name}: ${m.text}`));
 socket.on('room:closed', r => (log('room closed:', r), process.exit(0)));
 
 let started = false;
@@ -30,6 +31,8 @@ socket.on('room:state', v => {
   if (v.phase === 'ended') log(`WINNER=${v.winner}`);
   if (mode === 'host' && !started && v.phase === 'lobby' && v.players.some(p => p.role === 'runner')) {
     started = true;
+    // Hunter-team message: runners must never receive it.
+    socket.emit('chat:send', { text: 'BOT HUNTER SECRET' }, r => log('chat', r.ok ? 'sent' : r.error));
     setTimeout(() => socket.emit('game:start', r => log('start', r.ok ? 'ok' : r.error)), Number(arg('start-after', '3')) * 1000);
   }
 });

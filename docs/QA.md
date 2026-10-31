@@ -102,6 +102,18 @@ E2E needs: `DEBUG=1 npm run server`, Metro (`npm run app`) and the app installed
 | C8 | Clan code shows next to the player in a game lobby | http |
 | C9 | UI: no-clan state, join by code (+ error), owner vs member actions, leave confirm, debounced search, top list, form validation | app clans.test |
 
+### Team chat
+| ID | Case | Test |
+|---|---|---|
+| T1 | Messages go to the sender's team log only | chat.test |
+| T2 | Caught runner switches to hunters chat; runner history not kept | chat.test, chatStore.test, multi E2E |
+| T3 | Trimmed, capped at 300 chars, empty rejected, closed after the game | chat.test |
+| T4 | Rate limit 5 messages / 5 s per player | chat.test |
+| T5 | History capped at 100 per team | chat.test |
+| T6 | Socket: other team never receives; ids are public; outsiders rejected | chat.test, run.sh bot-log check |
+| T7 | App: dedupe, unread only for others while closed, team-switch notice, errors, reset on leave | chatStore.test |
+| T8 | UI: lobby chat (both platforms), runner chat hides hunter messages, helper sees hunter history | edge, runner_caught, multi |
+
 ### App
 | ID | Case | Test |
 |---|---|---|
@@ -148,4 +160,6 @@ Run with `DEBUG=1`; watch `curl <server>:3000/debug/rooms`.
 - Multi-simulator E2E can be flaky on the 3rd simulator (Maestro driver lag), not the app.
 - Android shows a "nearby devices" (local network) prompt because the dev server is on the LAN; the
   launch flow accepts it. A server on the internet would not trigger it.
+- Android E2E: right after closing team chat, Maestro's first tap on "Leave game" is sometimes not
+  registered (a manual tap works). The flow retries it; worth checking by hand on a real Android phone.
 - Player ids are random, not cryptographic (`Math.random`); fine for a game, use a CSPRNG for real accounts.

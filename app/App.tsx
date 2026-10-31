@@ -1,14 +1,20 @@
 import React, { useEffect } from 'react';
-import { StatusBar } from 'react-native';
+import { LogBox, StatusBar, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { connectSocket } from './src/data/socketClient';
 import { useLocationTracking } from './src/hooks/useLocationTracking';
+import { ChatSheet } from './src/screens/ChatScreen';
 import { GameScreen } from './src/screens/GameScreen';
 import { HomeTabs } from './src/screens/HomeTabs';
 import { LobbyScreen } from './src/screens/LobbyScreen';
 import { ResultScreen } from './src/screens/ResultScreen';
 import { useGameStore } from './src/store/gameStore';
 import { useProfileStore } from './src/store/profileStore';
+
+// react-native-gifted-chat 3.4 passes web-only dependency arrays to Reanimated hooks; harmless on native.
+LogBox.ignoreLogs(['[Reanimated] Dependencies should only be used on the web']);
 
 function Root() {
   const phase = useGameStore(s => s.view?.phase);
@@ -27,20 +33,29 @@ function Root() {
   switch (phase) {
     case undefined:
       return <HomeTabs />;
-    case 'lobby':
-      return <LobbyScreen locationError={error} />;
     case 'ended':
       return <ResultScreen />;
     default:
-      return <GameScreen position={position} locationError={error} />;
+      return (
+        <>
+          {phase === 'lobby' ? <LobbyScreen locationError={error} /> : <GameScreen position={position} locationError={error} />}
+          <ChatSheet />
+        </>
+      );
   }
 }
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="default" />
-      <Root />
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <StatusBar barStyle="default" />
+          <Root />
+        </SafeAreaProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });

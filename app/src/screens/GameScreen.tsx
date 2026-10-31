@@ -4,6 +4,7 @@ import MapView from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LatLng, isHunterTeam } from '@hunt/shared';
 import { Button } from '../components/Button';
+import { ChatButton } from '../components/ChatButton';
 import { CatchToast } from '../components/CatchToast';
 import { GameMap } from '../components/GameMap';
 import { PhaseBanner } from '../components/PhaseBanner';
@@ -94,9 +95,12 @@ export function GameScreen({ position, locationError }: Props) {
       </View>
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing(1) }]} pointerEvents="box-none">
-        <View style={styles.meRow}>
-          <Text style={styles.meName}>{me?.name}</Text>
-          {me && <RoleBadge role={me.role} testID="my-role" />}
+        <View style={styles.pills}>
+          <View style={styles.meRow}>
+            <Text style={styles.meName}>{me?.name}</Text>
+            {me && <RoleBadge role={me.role} testID="my-role" />}
+          </View>
+          <ChatButton />
         </View>
         {hunter ? (
           <Button title="Show everyone" variant="gray" onPress={showAll} style={styles.onMap} disabled={blindfolded} />
@@ -114,6 +118,7 @@ const MAP_PADDING = { top: 200, bottom: 200, left: 60, right: 60 };
 const styles = StyleSheet.create({
   top: { position: 'absolute', left: spacing(2), right: spacing(2), top: 0, gap: spacing(1) },
   bottom: { position: 'absolute', left: spacing(2), right: spacing(2), bottom: 0, gap: spacing(1) },
+  pills: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing(1) },
   meRow: {
     flexDirection: 'row',
     alignItems: 'center',

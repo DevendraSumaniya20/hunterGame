@@ -25,3 +25,8 @@ appId: com.dsumniya.huntinggame
       - tapOn:
           text: "Allow"
           optional: true
+# Debug builds download the JS bundle from Metro after a data clear (slow on Android emulators).
+- extendedWaitUntil:
+    visible:
+      id: tab-play
+    timeout: 120000

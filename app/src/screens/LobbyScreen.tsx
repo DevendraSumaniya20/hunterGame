@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/Button';
+import { ChatButton } from '../components/ChatButton';
 import { formatClock } from '../hooks/useCountdown';
 import { PlayerList } from '../components/PlayerList';
 import { Row } from '../components/Row';
@@ -50,6 +51,7 @@ export function LobbyScreen({ locationError }: { locationError: string | null })
       </ScrollView>
 
       <View style={styles.footer}>
+        <ChatButton />
         {isHost ? (
           <Button
             title={runnerCount ? `Start game` : 'Waiting for runners'}

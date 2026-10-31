@@ -19,6 +19,8 @@ Hunters win by catching everyone; runners win if anyone is free when the clock r
 - Clans: create, share a 6-character code, join by code, search by name or code, top clans
   (3 points per win + 1 per catch, this week / all time), owner can edit and remove members,
   ownership passes on when the owner leaves; clan code shows next to players in game lobbies
+- Team chat (react-native-gifted-chat over socket.io): hunters and runners each have their own channel,
+  delivered only to the sender's current team; caught runners move to the hunters' chat; unread badge
 - Secret per-install player id; other players only ever see a hash of it
 
 ## Run
@@ -41,4 +43,5 @@ npm run test:e2e     # Maestro flows on a simulator, with a bot player
 e2e/multi.sh         # full game on 3 simulators
 ```
 
-See [docs/QA.md](docs/QA.md) for the test plan and case catalog, and [PLAN.md](PLAN.md) for the architecture.
+See [docs/QA.md](docs/QA.md) for the test plan and case catalog, [PLAN.md](PLAN.md) for the architecture, and
+[CLAUDE.md](CLAUDE.md) for conventions and gotchas (also read automatically by Claude Code).

@@ -1,4 +1,4 @@
-import type { CatchEvent, RoomView } from '@hunt/shared';
+import type { CatchEvent, ChatMessage, RoomView } from '@hunt/shared';
 import { publicId } from '../domain/ids';
 
 export { publicId };
@@ -14,3 +14,5 @@ export function publicView(v: RoomView): RoomView {
     catches: v.catches.map(publicCatch),
   };
 }
+
+export const publicMessage = (m: ChatMessage): ChatMessage => ({ ...m, fromId: publicId(m.fromId) });

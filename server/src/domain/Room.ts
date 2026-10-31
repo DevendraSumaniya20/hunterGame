@@ -1,5 +1,7 @@
 import {
+  CHAT_MAX_LENGTH,
   CatchEvent,
+  ChatMessage,
   DEFAULT_COLOR,
   DEFAULT_SETTINGS,
   GameSettings,
@@ -8,12 +10,18 @@ import {
   PlayerColor,
   Role,
   RoomView,
+  Team,
   Winner,
   distanceM,
   isHunterTeam,
+  teamOf,
 } from '@hunt/shared';
 
 export const MAX_PLAYERS = 20;
+const CHAT_HISTORY = 100;
+/** at most CHAT_BURST messages per player within CHAT_WINDOW_MS */
+const CHAT_BURST = 5;
+const CHAT_WINDOW_MS = 5_000;
 
 export class GameError extends Error {}
 
@@ -36,6 +44,10 @@ export class Room {
   catches: CatchEvent[] = [];
   /** epoch ms the chase began, for survival times; null until then */
   chaseStartedAt: number | null = null;
+  /** Separate logs so a team never sees the other team's messages. fromId holds the secret id. */
+  private chat: Record<Team, ChatMessage[]> = { hunters: [], runners: [] };
+  private chatTimes = new Map<string, number[]>();
+  private chatSeq = 0;
 
   constructor(
     readonly code: string,
@@ -131,6 +143,38 @@ export class Room {
     this.phase = 'ended';
     this.phaseEndsAt = null;
     this.winner = winner;
+  }
+
+  /** Team chat: goes to the sender's current team only. Open until the game ends. */
+  say(id: string, rawText: unknown, now: number): ChatMessage {
+    const p = this.players.get(id);
+    if (!p) throw new GameError('Not in this game');
+    if (this.phase === 'ended') throw new GameError('Chat is closed, the game is over');
+    const text = typeof rawText === 'string' ? rawText.trim().slice(0, CHAT_MAX_LENGTH) : '';
+    if (!text) throw new GameError('Message is empty');
+    const recent = (this.chatTimes.get(id) ?? []).filter(t => now - t < CHAT_WINDOW_MS);
+    if (recent.length >= CHAT_BURST) throw new GameError('Slow down a little');
+    this.chatTimes.set(id, [...recent, now]);
+
+    const team = teamOf(p.role);
+    const msg = { id: `${now}-${++this.chatSeq}`, team, fromId: id, name: p.name, color: p.color, text, at: now };
+    const log = this.chat[team];
+    log.push(msg);
+    if (log.length > CHAT_HISTORY) log.shift();
+    return msg;
+  }
+
+  /** The caller's current team and its messages (a caught runner gets the hunters' log). */
+  chatFor(id: string): { team: Team; messages: ChatMessage[] } {
+    const p = this.players.get(id);
+    if (!p) throw new GameError('Not in this game');
+    const team = teamOf(p.role);
+    return { team, messages: [...this.chat[team]] };
+  }
+
+  teamOfPlayer(id: string): Team | null {
+    const p = this.players.get(id);
+    return p ? teamOf(p.role) : null;
   }
 
   /** Builds what `viewerId` may see: runners never see other players' positions mid-game. */

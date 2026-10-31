@@ -56,6 +56,21 @@ appId: com.dsumniya.huntinggame
     visible: "2 runners left. Catch them!"
     timeout: 40000
 - takeScreenshot: e2e/screens/multi_2_host_chase
+# Hunter-team chat: only hunters (and later helpers) may read this.
+- tapOn:
+    id: chat-button
+- assertVisible:
+    id: chat-title
+    text: "Hunter team"
+- tapOn:
+    id: chat-input
+- inputText: "Ravi is north"
+- tapOn: "Send"
+- extendedWaitUntil:
+    visible: "Ravi is north.*"
+    timeout: 5000
+- tapOn:
+    id: chat-done
 # Hunt Ravi down.
 - extendedWaitUntil:   # pause: let the other devices catch up
     visible: "__never__"

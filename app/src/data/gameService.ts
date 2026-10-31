@@ -1,4 +1,4 @@
-import type { Ack, GameSettings, LatLng, PlayerColor, RoomView } from '@hunt/shared';
+import type { Ack, ChatMessage, GameSettings, LatLng, PlayerColor, RoomView, Team } from '@hunt/shared';
 import { socket } from './socketClient';
 
 type AckResult<T> = Parameters<Ack<T>>[0];
@@ -26,4 +26,6 @@ export const gameService = {
   leaveRoom: () => socket.emit('room:leave'),
   // volatile: drop fixes while offline instead of replaying a burst on reconnect (the heartbeat resends).
   sendLocation: (p: LatLng) => socket.volatile.emit('location:update', p),
+  sendChat: (text: string) => request<ChatMessage>(ack => socket.emit('chat:send', { text }, ack)),
+  chatHistory: () => request<{ team: Team; messages: ChatMessage[] }>(ack => socket.emit('chat:history', ack)),
 };

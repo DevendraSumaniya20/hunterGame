@@ -69,6 +69,22 @@ export interface RoomView {
   nearestHunterM: number | null;
 }
 
+// ---- Team chat ----
+
+export type Team = 'hunters' | 'runners';
+export const CHAT_MAX_LENGTH = 300;
+
+export interface ChatMessage {
+  id: string;
+  team: Team;
+  /** public id of the sender */
+  fromId: string;
+  name: string;
+  color: PlayerColor;
+  text: string;
+  at: number;
+}
+
 export type Ack<T = undefined> = (res: { ok: true; data: T } | { ok: false; error: string }) => void;
 
 export interface ClientToServerEvents {
@@ -80,12 +96,17 @@ export interface ClientToServerEvents {
   'room:leave': () => void;
   'game:start': (ack: Ack) => void;
   'location:update': (p: LatLng) => void;
+  'chat:send': (p: { text: string }, ack: Ack<ChatMessage>) => void;
+  /** messages of the caller's current team */
+  'chat:history': (ack: Ack<{ team: Team; messages: ChatMessage[] }>) => void;
 }
 
 export interface ServerToClientEvents {
   'room:state': (view: RoomView) => void;
   'room:closed': (reason: string) => void;
   'game:caught': (e: CatchEvent) => void;
+  /** only delivered to players on the message's team */
+  'chat:message': (m: ChatMessage) => void;
   /** Sent on every connect: the room this player is in, or null (e.g. after a server restart). */
   session: (p: { roomCode: string | null }) => void;
 }
@@ -206,3 +227,4 @@ export function distanceM(a: LatLng, b: LatLng): number {
 }
 
 export const isHunterTeam = (role: Role) => role !== 'runner';
+export const teamOf = (role: Role): Team => (isHunterTeam(role) ? 'hunters' : 'runners');

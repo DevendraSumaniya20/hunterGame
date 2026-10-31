@@ -12,13 +12,15 @@ case "${1:-}" in
     maestro --device "$DEVICE" test e2e/flows/clans.yaml
     ;;
   runner)
-    npx tsx e2e/bot.ts host > "$BOT_LOG" 2>&1 &
+    npx tsx e2e/bot.ts host --start-after 15 > "$BOT_LOG" 2>&1 &
     BOT=$!
     trap 'kill $BOT 2>/dev/null; echo "--- bot log"; cat "$BOT_LOG"' EXIT
     for _ in $(seq 20); do grep -q ROOM_CODE= "$BOT_LOG" && break; sleep 0.5; done
     CODE=$(grep -o 'ROOM_CODE=[A-Z0-9]*' "$BOT_LOG" | cut -d= -f2)
     echo "Bot hosting room $CODE"
     maestro --device "$DEVICE" test -e ROOM_CODE="$CODE" e2e/flows/runner_caught.yaml
+    # The hunter bot must never have received the runners' chat.
+    if grep -q "hello runners" "$BOT_LOG"; then echo "FAILED: hunter received runner chat"; exit 1; fi
     ;;
   host)
     npx tsx e2e/bot.ts runner --listen 4001 > "$BOT_LOG" 2>&1 &

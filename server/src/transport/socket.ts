@@ -5,7 +5,7 @@ import type { ClanRepository } from '../data/ClanRepository';
 import type { GameRepository } from '../data/GameRepository';
 import { GameError, Room } from '../domain/Room';
 import { RoomManager } from '../services/RoomManager';
-import { publicCatch, publicView } from './publicIds';
+import { publicCatch, publicMessage, publicView } from './publicIds';
 
 type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents, {}, { playerId: string }>;
 
@@ -126,6 +126,28 @@ export function attachSocket(http: HttpServer, { games, clans }: SocketDeps = {}
       debug(`loc ${playerId} ${p.lat},${p.lng}`);
       manager.updateLocation(playerId, { lat: p.lat, lng: p.lng });
     });
+
+    socket.on('chat:send', (p, ack) =>
+      handle(ack, () => {
+        const room = manager.roomOf(playerId);
+        if (!room) throw new GameError('Not in a game');
+        const msg = publicMessage(room.say(playerId, p?.text, Date.now()));
+        // Team is checked per socket at send time, so a runner who just turned helper stops getting runner chat.
+        socketsIn(room)
+          .filter(s => room.teamOfPlayer(s.data.playerId) === msg.team)
+          .forEach(s => s.emit('chat:message', msg));
+        return msg;
+      }),
+    );
+
+    socket.on('chat:history', ack =>
+      handle(ack, () => {
+        const room = manager.roomOf(playerId);
+        if (!room) throw new GameError('Not in a game');
+        const { team, messages } = room.chatFor(playerId);
+        return { team, messages: messages.map(publicMessage) };
+      }),
+    );
 
     socket.on('disconnect', reason => {
       debug(`disconnect ${playerId} ${reason}`);
