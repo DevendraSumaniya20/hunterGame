@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Switch, Text, View } from 'react-native';
 import { Avatar } from '../components/Avatar';
 import { ColorPicker } from '../components/ColorPicker';
 import { InputRow } from '../components/InputRow';
+import { KeyboardScroll } from '../components/KeyboardScroll';
 import { LargeTitle } from '../components/LargeTitle';
 import { Row } from '../components/Row';
 import { Screen } from '../components/Screen';
@@ -30,10 +31,12 @@ export function ProfileScreen() {
 
   return (
     <Screen tabbed>
-      <ScrollView
+      <KeyboardScroll
         contentContainerStyle={styles.content}
-        keyboardDismissMode="on-drag"
-        refreshControl={<RefreshControl refreshing={loading && !!data} onRefresh={reload} />}>
+        refreshControl={
+          <RefreshControl refreshing={loading && !!data} onRefresh={reload} />
+        }
+      >
         <LargeTitle title="Profile" />
 
         <View style={styles.hero}>
@@ -54,12 +57,22 @@ export function ProfileScreen() {
           <ColorPicker value={color} onChange={c => update({ color: c })} />
         </Section>
 
-        <Section header="Your stats" footer={error ? `${error}. Pull down to try again.` : undefined}>
-          <Row title="Games played" value={s ? String(s.games) : '–'} testID="stat-games" />
+        <Section
+          header="Your stats"
+          footer={error ? `${error}. Pull down to try again.` : undefined}
+        >
+          <Row
+            title="Games played"
+            value={s ? String(s.games) : '–'}
+            testID="stat-games"
+          />
           <Row title="Wins" value={s ? `${s.wins} (${winRate}%)` : '–'} />
           <Row title="Runners caught" value={s ? String(s.catches) : '–'} />
           <Row title="Times caught" value={s ? String(s.timesCaught) : '–'} />
-          <Row title="Longest escape" value={s ? formatClock(s.bestSurvivalSec) : '–'} />
+          <Row
+            title="Longest escape"
+            value={s ? formatClock(s.bestSurvivalSec) : '–'}
+          />
         </Section>
 
         <Section header="Settings">
@@ -78,16 +91,25 @@ export function ProfileScreen() {
 
         <Section header="How to play">
           {RULES.map((rule, i) => (
-            <Row key={rule} multiline title={rule} leading={<Text style={styles.step}>{i + 1}</Text>} />
+            <Row
+              key={rule}
+              multiline
+              title={rule}
+              leading={<Text style={styles.step}>{i + 1}</Text>}
+            />
           ))}
         </Section>
-      </ScrollView>
+      </KeyboardScroll>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing(3), paddingTop: spacing(2), paddingBottom: spacing(4) },
+  content: {
+    gap: spacing(3),
+    paddingTop: spacing(2),
+    paddingBottom: spacing(4),
+  },
   hero: { alignItems: 'center', gap: spacing(1) },
   heroName: { ...type.title2, color: colors.label },
   step: { ...type.headline, ...type.rounded, width: 18, color: colors.tint },

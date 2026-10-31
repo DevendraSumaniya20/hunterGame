@@ -31,7 +31,7 @@ app/                     React Native CLI 0.88 (NOT Expo), TypeScript, zustand
                          Clans, ClanDetail, ClanForm, Profile, Chat (Gifted Chat in a Modal)
   src/components/        Screen, LargeTitle, Section, Row, InputRow, Button, SegmentedControl, TabBar,
                          TabIcon, Avatar, ColorPicker, PlayerList, PlayerMarker, GameMap, PhaseBanner,
-                         Radar, CatchToast, ClanView, ChatButton, EmptyState
+                         Radar, CatchToast, ClanView, ChatButton, EmptyState, KeyboardScroll
   src/theme.ts           Apple HIG tokens: PlatformColor semantic colours, type scale, spacing
 e2e/                     Maestro flows + bot.ts (scripted second player) + run.sh / multi.sh / live_host.sh
 ```
@@ -60,6 +60,8 @@ e2e/live_host.sh                       # simulator hosts a room for a real phone
   to hunter chat and does not keep runner history. Chat closes when the game ends.
 - Keep layers: domain has no I/O; repositories have no socket code; screens stay dumb (logic in stores).
 - UI: Apple HIG look via `theme.ts` tokens and the existing components; reuse before adding new ones.
+- Any screen with text fields scrolls with `KeyboardScroll` (keyboard-controller's KeyboardAwareScrollView),
+  never a bare ScrollView/KeyboardAvoidingView; chat uses Gifted Chat's own keyboard handling.
 - Every behaviour change gets a test at the lowest layer that can prove it; UI flows get a Maestro step.
 - Commit/push only when asked; conventional-commit messages.
 
@@ -77,6 +79,9 @@ e2e/live_host.sh                       # simulator hosts a room for a real phone
   first keystrokes can drop → text entry is wrapped in `retry` + `assertVisible`; `copyTextFrom` returns
   the accessibility label ("Room code A B C D E") → strip it.
 - jest: `jest.mock` factories may only use variables named `mock*`; keep fake state inside the factory.
+  `jest.setup.js` mocks storage, the REST api and react-native-keyboard-controller (its own mock is ESM).
+- iOS simulators here use the hardware keyboard, so the on-screen keyboard never shows; check keyboard
+  layout on the Android emulator (screenshot `e2e/screens/clans_keyboard`).
 - macOS `sed` has no `\b`; use python for multi-line or word-boundary edits.
 - This Mac has no Simulator.app GUI; simulators run headless (`xcrun simctl`), and extra simulators have
   been deleted between sessions — recreate with `xcrun simctl create` if `multi.sh` reports "not connected".

@@ -13,6 +13,14 @@ appId: com.dsumniya.huntinggame
     visible:
       id: no-clan
     timeout: 10000
+# Keyboard: the code field near the bottom must stay visible above the keyboard.
+- tapOn:
+    id: clan-code-input
+- waitForAnimationToEnd
+- assertVisible:
+    id: clan-code-input
+- takeScreenshot: e2e/screens/clans_keyboard
+- runFlow: common/dismiss_keyboard.yaml
 - tapOn:
     id: create-clan
 - assertVisible:

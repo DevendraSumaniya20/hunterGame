@@ -19,7 +19,8 @@ interface ChatState {
   send(text: string): Promise<void>;
 }
 
-const myTeam = (view: RoomView | null): Team | null => {
+/** The player's team, straight from the live game state (single source of truth). */
+export const myTeam = (view: RoomView | null | undefined): Team | null => {
   const me = view?.players.find(p => p.id === view.me);
   return me ? teamOf(me.role) : null;
 };
@@ -53,7 +54,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 socket.on('chat:message', m => {
   const s = useChatStore.getState();
-  if (m.team !== s.team) return; // stale delivery from before a team switch
+  if (m.team !== myTeam(useGameStore.getState().view)) return; // stale delivery from before a team switch
   if (s.items.some(i => i.id === m.id)) return; // already have it (send ack, reconnect)
   const mine = m.fromId === useGameStore.getState().view?.me;
   useChatStore.setState({ items: merge(s.items, [m]), unread: s.open || mine ? s.unread : s.unread + 1 });

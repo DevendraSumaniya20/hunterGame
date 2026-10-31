@@ -1,4 +1,13 @@
 /* eslint-env jest */
+// Native keyboard library: plain ScrollView / passthrough provider in tests.
+jest.mock('react-native-keyboard-controller', () => {
+  const { ScrollView } = require('react-native');
+  return {
+    KeyboardAwareScrollView: ScrollView,
+    KeyboardProvider: ({ children }) => children,
+  };
+});
+
 // In-memory stand-ins for native storage and the network, shared by all tests.
 jest.mock('./src/data/storage', () => {
   const mem = new Map();

@@ -4,7 +4,7 @@ import { AvatarProps, GiftedChat, IMessage } from 'react-native-gifted-chat';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CHAT_MAX_LENGTH, DEFAULT_COLOR, PlayerColor } from '@hunt/shared';
 import { Avatar } from '../components/Avatar';
-import { useChatStore } from '../store/chatStore';
+import { myTeam, useChatStore } from '../store/chatStore';
 import { useGameStore } from '../store/gameStore';
 import { colors, spacing, type } from '../theme';
 
@@ -23,7 +23,8 @@ export function ChatSheet() {
 }
 
 function ChatScreen() {
-  const { team, items, error, send, setOpen } = useChatStore();
+  const { items, error, send, setOpen } = useChatStore();
+  const team = useGameStore(s => myTeam(s.view));
   const me = useGameStore(s => s.view?.me ?? '');
   const insets = useSafeAreaInsets();
   const [headerBottom, setHeaderBottom] = useState(insets.top + 56);
