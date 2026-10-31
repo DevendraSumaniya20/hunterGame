@@ -5,7 +5,9 @@ map; the server catches a runner when a hunter/helper is within the catch radius
 a **helper** (hunter team). Hunters win if everyone is caught; runners win if anyone is free at time-up.
 Extras: history, stats, leaderboards, clans, per-team chat.
 
-Repo: github.com/DevendraSumaniya20/hunterGame (branch `main`). Read `docs/QA.md` for the test catalog.
+Repo: github.com/DevendraSumaniya20/hunterGame (branch `main`). Docs: `docs/FEATURES.md` (rules, screens),
+`docs/ARCHITECTURE.md`, `docs/API.md` (all events/endpoints), `docs/SETUP.md`, `docs/QA.md`, `DEPLOY.md`.
+Keep these docs updated in the same change as the code.
 
 ## Layout
 

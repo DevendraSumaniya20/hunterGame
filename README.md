@@ -45,5 +45,16 @@ npm run test:e2e     # Maestro flows on a simulator, with a bot player
 e2e/multi.sh         # full game on 3 simulators
 ```
 
-See [docs/QA.md](docs/QA.md) for the test plan and case catalog, [PLAN.md](PLAN.md) for the architecture, and
-[CLAUDE.md](CLAUDE.md) for conventions and gotchas (also read automatically by Claude Code).
+## Documentation
+
+| Document | What's in it |
+|---|---|
+| [docs/FEATURES.md](docs/FEATURES.md) | Game rules and every screen and feature |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layers, game flow, visibility, identity, chat, database schema, key decisions |
+| [docs/API.md](docs/API.md) | Socket.io events and REST endpoints with payloads, errors and limits |
+| [docs/SETUP.md](docs/SETUP.md) | Install, configure, run on simulator/iPhone/Android, tests, troubleshooting |
+| [DEPLOY.md](DEPLOY.md) | Putting the server online and sharing the app |
+| [docs/QA.md](docs/QA.md) | Test strategy and test-case catalog |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | What was built, commit by commit, and bugs fixed |
+| [CLAUDE.md](CLAUDE.md) | Briefing for Claude Code: layout, commands, rules, gotchas |
+| [PLAN.md](PLAN.md) | The original build plan |
