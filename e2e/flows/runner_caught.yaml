@@ -1,0 +1,110 @@
+# Simulator plays a runner; bot (e2e/bot.ts host) hunts from the same spot.
+# Run via e2e/run.sh runner — it passes ROOM_CODE.
+appId: com.dsumniya.huntinggame
+---
+- runFlow: common/launch.yaml
+- setLocation:
+    latitude: 37.3349
+    longitude: -122.009
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: SimRunner
+      - assertVisible:
+          id: name-input
+          text: "SimRunner"
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: code-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: ${ROOM_CODE}
+      - assertVisible:
+          id: code-input
+          text: "${ROOM_CODE}"
+- scroll
+- tapOn:
+    id: join-button
+- assertVisible:
+    id: waiting-text
+- assertVisible:
+    id: player-BotHunter
+# Bot starts 3 s after we join, head start is 5 s.
+- extendedWaitUntil:
+    visible: "Run! Get as far away as you can."
+    timeout: 15000
+- takeScreenshot: e2e/screens/runner_headstart
+# We stand on the hunter, so the chase starts with our catch; we were the last runner.
+- extendedWaitUntil:
+    visible:
+      id: result-title
+      text: "Hunters win!"
+    timeout: 20000
+- assertVisible: "BotHunter caught SimRunner"
+- takeScreenshot: e2e/screens/runner_result
+- tapOn:
+    id: home-button
+- assertVisible:
+    id: create-button
+# ---- Tabs after the game ----
+- tapOn:
+    id: tab-history
+- extendedWaitUntil:
+    visible: "Caught by BotHunter.*"
+    timeout: 10000
+- tapOn: "Caught by BotHunter.*"
+- assertVisible:
+    id: detail-title
+    text: "You won"
+- assertVisible: "BotHunter caught SimRunner"
+- takeScreenshot: e2e/screens/tabs_history_detail
+- tapOn:
+    id: back-button
+- assertVisible: "Caught by BotHunter.*"
+
+- tapOn:
+    id: tab-leaderboard
+- extendedWaitUntil:
+    visible:
+      id: rank-1
+    timeout: 10000
+- assertVisible: "BotHunter"
+- tapOn:
+    id: board-survivors
+- tapOn:
+    id: period-all
+- takeScreenshot: e2e/screens/tabs_leaderboard
+
+- tapOn:
+    id: tab-profile
+- assertVisible: "Games played"
+- tapOn:
+    id: color-purple
+- assertVisible:
+    id: color-purple
+    selected: true
+- takeScreenshot: e2e/screens/tabs_profile
+
+# Relaunch without clearing data: same player, same colour, same history.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-profile
+    timeout: 30000
+- tapOn:
+    id: tab-profile
+- assertVisible:
+    id: color-purple
+    selected: true
+- tapOn:
+    id: tab-history
+- extendedWaitUntil:
+    visible: "Caught by BotHunter.*"
+    timeout: 10000

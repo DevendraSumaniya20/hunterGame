@@ -1,0 +1,61 @@
+# 3-device game, device 2: Ravi runs, gets caught, then helps catch Mia.
+appId: com.dsumniya.huntinggame
+---
+- runFlow: ../common/launch.yaml
+- setLocation:
+    latitude: 37.3349
+    longitude: -122.009
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: Ravi
+      - assertVisible:
+          id: name-input
+          text: "Ravi"
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: code-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: ${ROOM_CODE}
+      - assertVisible:
+          id: code-input
+          text: "${ROOM_CODE}"
+- scroll
+- tapOn:
+    id: join-button
+- assertVisible:  # lobby can be gone already if the host starts right away
+    id: waiting-text
+    optional: true
+- extendedWaitUntil:
+    visible: "Run! Get as far away as you can."
+    timeout: 120000
+# Hana walks onto us and we switch sides.
+- extendedWaitUntil:
+    visible:
+      id: my-role
+      text: Helper
+    timeout: 60000
+- assertVisible: "Hana caught you"
+- assertVisible: "1 runner left. Catch them!"
+- takeScreenshot: e2e/screens/multi_4_ravi_helper
+# Helpers see runners on the map: go get Mia.
+- extendedWaitUntil:   # pause: let the other devices catch up
+    visible: "__never__"
+    timeout: 3000
+    optional: true
+- setLocation:
+    latitude: 37.3249
+    longitude: -122.009
+- extendedWaitUntil:
+    visible:
+      id: result-title
+      text: "Hunters win!"
+    timeout: 30000
+- assertVisible: "You were caught and joined the hunters. They won."

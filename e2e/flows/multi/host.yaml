@@ -1,0 +1,80 @@
+# 3-device game, device 1: Hana hosts and hunts. Run via e2e/multi.sh.
+# Positions on a north-south line ~1.1 km apart: Hana (north), Ravi (middle), Mia (south).
+appId: com.dsumniya.huntinggame
+---
+- runFlow: ../common/launch.yaml
+- setLocation:
+    latitude: 37.3449
+    longitude: -122.009
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: Hana
+      - assertVisible:
+          id: name-input
+          text: "Hana"
+- scroll
+- tapOn: "Game settings"
+- scrollUntilVisible:
+    element:
+      id: headstart-input
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: headstart-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: "15"
+      - assertVisible:
+          id: headstart-input
+          text: "15"
+- scroll
+- tapOn:
+    id: create-button
+- copyTextFrom:
+    id: room-code
+- runScript: ../../scripts/publishCode.js
+# Wait for both runners from the other simulators.
+- extendedWaitUntil:
+    visible:
+      id: player-Ravi
+    timeout: 120000
+- extendedWaitUntil:
+    visible:
+      id: player-Mia
+    timeout: 120000
+- takeScreenshot: e2e/screens/multi_1_host_lobby
+- tapOn:
+    id: start-button
+- assertVisible: "Eyes closed!"
+- extendedWaitUntil:
+    visible: "2 runners left. Catch them!"
+    timeout: 40000
+- takeScreenshot: e2e/screens/multi_2_host_chase
+# Hunt Ravi down.
+- extendedWaitUntil:   # pause: let the other devices catch up
+    visible: "__never__"
+    timeout: 6000
+    optional: true
+- setLocation:
+    latitude: 37.3349
+    longitude: -122.009
+- extendedWaitUntil:
+    visible: "1 runner left. Catch them!"
+    timeout: 20000
+- assertVisible: "Ravi was caught"
+- takeScreenshot: e2e/screens/multi_3_host_after_catch
+# Ravi, now a helper, catches Mia from his device.
+- extendedWaitUntil:
+    visible:
+      id: result-title
+      text: "Hunters win!"
+    timeout: 120000
+- assertVisible: "Hana caught Ravi"
+- assertVisible: "Ravi caught Mia"
+- takeScreenshot: e2e/screens/multi_6_host_result

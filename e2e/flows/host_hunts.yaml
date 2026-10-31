@@ -1,0 +1,67 @@
+# Simulator hosts and hunts; bot (e2e/bot.ts runner --listen 4001) hides at Apple Park.
+appId: com.dsumniya.huntinggame
+---
+- runFlow: common/launch.yaml
+# Start ~1 km north of the runner so nobody is caught at chase start.
+- setLocation:
+    latitude: 37.3449
+    longitude: -122.009
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: SimHunter
+      - assertVisible:
+          id: name-input
+          text: "SimHunter"
+- scroll
+- tapOn: "Game settings"
+- scrollUntilVisible:
+    element:
+      id: headstart-input
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: headstart-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: "5"
+      - assertVisible:
+          id: headstart-input
+          text: "5"
+- scroll
+- tapOn:
+    id: create-button
+- assertVisible:
+    id: room-code
+- copyTextFrom:
+    id: room-code
+- runScript: ../scripts/joinBot.js
+- extendedWaitUntil:
+    visible:
+      id: player-BotRunner
+    timeout: 10000
+- takeScreenshot: e2e/screens/host_lobby
+- tapOn:
+    id: start-button
+- assertVisible: "Eyes closed!"
+- extendedWaitUntil:
+    visible: "1 runner left. Catch them!"
+    timeout: 15000
+- takeScreenshot: e2e/screens/host_chase
+# Walk onto the runner.
+- setLocation:
+    latitude: 37.3349
+    longitude: -122.009
+- extendedWaitUntil:
+    visible:
+      id: result-title
+      text: "Hunters win!"
+    timeout: 20000
+- assertVisible: "SimHunter caught BotRunner"
+- assertVisible: "You caught every runner."
+- takeScreenshot: e2e/screens/host_result

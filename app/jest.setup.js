@@ -1,0 +1,28 @@
+/* eslint-env jest */
+// In-memory stand-ins for native storage and the network, shared by all tests.
+jest.mock('./src/data/storage', () => {
+  const mem = new Map();
+  return {
+    storage: {
+      getItem: async k => mem.get(k) ?? null,
+      setItem: async (k, v) => {
+        mem.set(k, v);
+      },
+    },
+    readJson: async k => (mem.has(k) ? JSON.parse(mem.get(k)) : null),
+    writeJson: async (k, v) => {
+      mem.set(k, JSON.stringify(v));
+    },
+    __mem: mem,
+  };
+});
+
+jest.mock('./src/data/api', () => ({
+  api: {
+    profile: jest.fn(),
+    saveProfile: jest.fn(() => Promise.resolve()),
+    history: jest.fn(),
+    game: jest.fn(),
+    leaderboard: jest.fn(),
+  },
+}));

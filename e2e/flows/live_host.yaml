@@ -1,0 +1,31 @@
+# Hosts a real game on a simulator for a person on a physical phone.
+# Starts the game once ${PLAYERS} players (host included) are in. Run via e2e/live_host.sh.
+appId: com.dsumniya.huntinggame
+---
+- runFlow: common/launch.yaml
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: Host18
+      - assertVisible:
+          id: name-input
+          text: "Host18"
+- scroll
+- tapOn:
+    id: create-button
+- copyTextFrom:
+    id: room-code
+- runScript: ../scripts/publishCode.js
+- extendedWaitUntil:
+    visible: "Players (${PLAYERS})"
+    timeout: 900000
+- tapOn:
+    id: start-button
+- extendedWaitUntil:
+    visible:
+      id: result-title
+    timeout: 1800000

@@ -1,0 +1,90 @@
+# UI edge cases on one device, no other players needed.
+appId: com.dsumniya.huntinggame
+---
+- runFlow: common/launch.yaml
+- extendedWaitUntil:  # debug builds load JS from Metro first
+    visible:
+      id: create-button
+    timeout: 30000
+# Buttons stay disabled until the inputs are valid.
+- assertVisible:
+    id: create-button
+    enabled: false
+- assertVisible:
+    id: join-button
+    enabled: false
+- retry:
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: Edge
+      - assertVisible:
+          id: name-input
+          text: "Edge"
+- assertVisible:
+    id: create-button
+    enabled: true
+- retry:
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: code-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: ABC
+      - assertVisible:
+          id: code-input
+          text: "ABC"
+- runFlow: common/dismiss_keyboard.yaml
+- assertVisible:
+    id: join-button
+    enabled: false
+# A code that does not exist shows the server's reason.
+- retry:
+    maxRetries: 3
+    commands:
+      - tapOn:  # right edge: cursor at the end (iOS: clear button), so eraseText empties the field
+          id: code-input
+          point: "97%,50%"
+      - eraseText
+      - inputText: ZZZZZ
+      - assertVisible:
+          id: code-input
+          text: "ZZZZZ"
+- runFlow: common/dismiss_keyboard.yaml
+- tapOn:
+    id: join-button
+- assertVisible:
+    id: error-text
+    text: "Room not found"
+# Host a room, then leave it: back home, room gone.
+- tapOn:
+    id: create-button
+- assertVisible:
+    id: room-code
+- assertVisible: "Waiting for runners"
+- copyTextFrom:
+    id: room-code
+- tapOn:
+    id: leave-button
+- assertVisible:
+    id: create-button
+# Name is remembered for the next game.
+- assertVisible:
+    id: name-input
+    text: "Edge"
+# Re-joining the room we closed must fail.
+- tapOn:
+    id: code-input
+    point: "97%,50%"
+- eraseText
+- inputText: ${maestro.copiedText.replace(/^Room code /, '').replace(/\s/g, '')}
+- runFlow: common/dismiss_keyboard.yaml
+- tapOn:
+    id: join-button
+- assertVisible:
+    id: error-text
+    text: "Room not found"

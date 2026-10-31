@@ -1,0 +1,55 @@
+# 3-device game, device 3: Mia runs and is caught last, by helper Ravi.
+appId: com.dsumniya.huntinggame
+---
+- runFlow: ../common/launch.yaml
+- setLocation:
+    latitude: 37.3249
+    longitude: -122.009
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: Mia
+      - assertVisible:
+          id: name-input
+          text: "Mia"
+- retry:  # first keystrokes can be lost while the keyboard warms up
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: code-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: ${ROOM_CODE}
+      - assertVisible:
+          id: code-input
+          text: "${ROOM_CODE}"
+- scroll
+- tapOn:
+    id: join-button
+- assertVisible:  # lobby can be gone already if the host starts right away
+    id: waiting-text
+    optional: true
+# Passing screens: the third simulator's driver can lag behind, so these are best-effort.
+- extendedWaitUntil:
+    visible: "Run! Get as far away as you can."
+    timeout: 120000
+    optional: true
+- extendedWaitUntil:
+    visible: "Stay hidden until the clock runs out."
+    timeout: 20000
+    optional: true
+- assertVisible:
+    id: radar
+    optional: true
+- takeScreenshot: e2e/screens/multi_5_mia_radar
+- extendedWaitUntil:
+    visible:
+      id: result-title
+      text: "Hunters win!"
+    timeout: 120000
+- assertVisible: "You were caught and joined the hunters. They won."
+- assertVisible: "Ravi caught Mia"

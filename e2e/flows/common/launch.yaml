@@ -1,0 +1,19 @@
+# Fresh app launch with location allowed; permission values differ per platform.
+appId: com.dsumniya.huntinggame
+---
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - launchApp:
+          clearState: true
+          permissions:
+            location: inuse
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - launchApp:
+          clearState: true
+          permissions:
+            all: allow

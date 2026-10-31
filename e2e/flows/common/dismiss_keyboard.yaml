@@ -1,0 +1,13 @@
+# hideKeyboard is reliable on Android; on iOS a scroll (keyboardDismissMode="on-drag") is.
+appId: com.dsumniya.huntinggame
+---
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - scroll
