@@ -1,7 +1,7 @@
 import React from 'react';
 import { ColorValue, StyleSheet, View } from 'react-native';
 
-export type TabName = 'play' | 'history' | 'leaderboard' | 'profile';
+export type TabName = 'play' | 'history' | 'leaderboard' | 'clans' | 'profile';
 
 /** Simple glyphs drawn with views, so the tab bar needs no icon font. */
 export function TabIcon({ name, color }: { name: TabName; color: ColorValue }) {
@@ -29,6 +29,12 @@ export function TabIcon({ name, color }: { name: TabName; color: ColorValue }) {
           ))}
         </View>
       );
+    case 'clans':
+      return (
+        <View style={styles.box}>
+          <View style={[styles.shield, { backgroundColor: color }]} />
+        </View>
+      );
     case 'profile':
       return (
         <View style={styles.box}>
@@ -54,6 +60,7 @@ const styles = StyleSheet.create({
   handRight: { position: 'absolute', width: 6, height: 2.2, top: 8.4, left: 7.2, borderRadius: 1 },
   podium: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, justifyContent: 'center', paddingBottom: 2 },
   bar: { width: 6, borderTopLeftRadius: 1.5, borderTopRightRadius: 1.5 },
+  shield: { width: 17, height: 20, borderTopLeftRadius: 3, borderTopRightRadius: 3, borderBottomLeftRadius: 9, borderBottomRightRadius: 9 },
   head: { width: 9, height: 9, borderRadius: 4.5, marginBottom: 2 },
   body: { width: 18, height: 9, borderTopLeftRadius: 9, borderTopRightRadius: 9 },
 });

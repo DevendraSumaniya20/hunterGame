@@ -8,6 +8,7 @@ const TABS: { name: TabName; label: string }[] = [
   { name: 'play', label: 'Play' },
   { name: 'history', label: 'History' },
   { name: 'leaderboard', label: 'Leaderboard' },
+  { name: 'clans', label: 'Clans' },
   { name: 'profile', label: 'Profile' },
 ];
 

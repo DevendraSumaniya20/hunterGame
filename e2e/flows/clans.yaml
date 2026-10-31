@@ -1,0 +1,80 @@
+# Clans on one device: create, share code, find via search and top list, leave (deletes the empty clan).
+appId: com.dsumniya.huntinggame
+---
+- runFlow: common/launch.yaml
+- evalScript: ${output.clan = 'E2E ' + (Date.now() % 1000000)}
+- extendedWaitUntil:
+    visible:
+      id: tab-clans
+    timeout: 30000
+- tapOn:
+    id: tab-clans
+- extendedWaitUntil:
+    visible:
+      id: no-clan
+    timeout: 10000
+- tapOn:
+    id: create-clan
+- assertVisible:
+    id: save-clan
+    enabled: false
+- retry:
+    maxRetries: 3
+    commands:
+      - tapOn:
+          id: clan-name-input
+      - waitForAnimationToEnd
+      - eraseText
+      - inputText: ${output.clan}
+      - assertVisible:
+          id: clan-name-input
+          text: ${output.clan}
+- tapOn:
+    id: clan-color-purple
+- tapOn:
+    id: save-clan
+- extendedWaitUntil:
+    visible:
+      id: clan-name
+      text: ${output.clan}
+    timeout: 10000
+- assertVisible:
+    id: clan-code
+- assertVisible: "1 of 30"
+- assertVisible:
+    id: edit-clan
+- takeScreenshot: e2e/screens/clans_mine
+
+# Search by name finds it.
+- tapOn:
+    id: clans-segment-search
+- tapOn:
+    id: clan-search-input
+- inputText: ${output.clan}
+- extendedWaitUntil:
+    visible: ${output.clan + '.*'}
+    timeout: 10000
+- takeScreenshot: e2e/screens/clans_search
+
+# Shows on the all-time top list, marked as yours.
+- tapOn:
+    id: clans-segment-top
+- tapOn:
+    id: clan-period-all
+- extendedWaitUntil:
+    visible: ${'.*' + output.clan + '.*yours.*'}
+    timeout: 10000
+
+# Leave: confirm in the alert; last member out deletes the clan.
+- tapOn:
+    id: clans-segment-mine
+- scrollUntilVisible:
+    element:
+      id: leave-clan
+- tapOn:
+    id: leave-clan
+- tapOn: "Leave"
+- extendedWaitUntil:
+    visible:
+      id: no-clan
+    timeout: 10000

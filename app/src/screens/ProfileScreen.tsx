@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-import { PLAYER_COLORS, PlayerColor } from '@hunt/shared';
+import { RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Avatar } from '../components/Avatar';
+import { ColorPicker } from '../components/ColorPicker';
 import { InputRow } from '../components/InputRow';
 import { LargeTitle } from '../components/LargeTitle';
 import { Row } from '../components/Row';
@@ -12,15 +12,6 @@ import { useApi } from '../hooks/useApi';
 import { formatClock } from '../hooks/useCountdown';
 import { useProfileStore } from '../store/profileStore';
 import { colors, spacing, type } from '../theme';
-
-const COLOR_NAMES: Record<PlayerColor, string> = {
-  '#007AFF': 'Blue',
-  '#AF52DE': 'Purple',
-  '#FF2D55': 'Pink',
-  '#5AC8FA': 'Teal',
-  '#FFCC00': 'Yellow',
-  '#8E8E93': 'Gray',
-};
 
 const RULES = [
   'The host is the hunter. Everyone else is a runner.',
@@ -60,21 +51,7 @@ export function ProfileScreen() {
             maxLength={20}
             placeholder="Required"
           />
-          <View style={styles.swatches} accessibilityRole="radiogroup">
-            {PLAYER_COLORS.map(c => (
-              <Pressable
-                key={c}
-                testID={`color-${COLOR_NAMES[c].toLowerCase()}`}
-                accessibilityRole="radio"
-                accessibilityLabel={COLOR_NAMES[c]}
-                accessibilityState={{ checked: c === color, selected: c === color }} // iOS only announces "selected"
-                onPress={() => update({ color: c })}
-                hitSlop={6}
-                style={[styles.swatchRing, c === color && styles.swatchSelected]}>
-                <View style={[styles.swatch, { backgroundColor: c }]} />
-              </Pressable>
-            ))}
-          </View>
+          <ColorPicker value={color} onChange={c => update({ color: c })} />
         </Section>
 
         <Section header="Your stats" footer={error ? `${error}. Pull down to try again.` : undefined}>
@@ -113,9 +90,5 @@ const styles = StyleSheet.create({
   content: { gap: spacing(3), paddingTop: spacing(2), paddingBottom: spacing(4) },
   hero: { alignItems: 'center', gap: spacing(1) },
   heroName: { ...type.title2, color: colors.label },
-  swatches: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing(2), paddingVertical: spacing(1.5) },
-  swatchRing: { padding: 3, borderRadius: 22, borderWidth: 2, borderColor: 'transparent' },
-  swatchSelected: { borderColor: colors.label },
-  swatch: { width: 30, height: 30, borderRadius: 15 },
   step: { ...type.headline, ...type.rounded, width: 18, color: colors.tint },
 });

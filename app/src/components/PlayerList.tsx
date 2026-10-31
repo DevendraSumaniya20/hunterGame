@@ -23,6 +23,7 @@ export function PlayerList({ players, me, hostId, header, footer }: Props) {
             key={p.id}
             testID={`player-${p.name}`}
             leading={<Avatar name={p.name} color={p.color} size={28} />}
+            subtitle={p.clanTag ? `Clan ${p.clanTag}` : undefined}
             title={tags.length ? `${p.name} (${tags.join(', ')})` : p.name}
             trailing={<RoleBadge role={p.role} />}
           />

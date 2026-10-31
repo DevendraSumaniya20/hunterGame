@@ -1,4 +1,15 @@
-import type { Board, GameDetail, GameSummary, LeaderboardRow, Period, PlayerColor, Profile } from '@hunt/shared';
+import type {
+  Board,
+  ClanDetail,
+  ClanSummary,
+  GameDetail,
+  GameSummary,
+  LeaderboardRow,
+  Period,
+  PlayerColor,
+  Profile,
+  RankedClan,
+} from '@hunt/shared';
 import { SERVER_URL } from '../config';
 import { playerId } from './socketClient';
 
@@ -30,4 +41,23 @@ export const api = {
   game: (id: number) => call<GameDetail>(`/players/${me()}/games/${id}`),
   leaderboard: (board: Board, period: Period) =>
     call<LeaderboardRow[]>(`/leaderboard?board=${board}&period=${period}&me=${me()}`),
+
+  myClan: () => call<ClanDetail | null>(`/players/${me()}/clan`),
+  createClan: (input: ClanInput) => call<ClanDetail>(`/players/${me()}/clan`, json('POST', input)),
+  updateClan: (input: ClanInput) => call<ClanDetail>(`/players/${me()}/clan`, json('PATCH', input)),
+  joinClan: (tag: string) => call<ClanDetail>(`/players/${me()}/clan/join`, json('POST', { tag })),
+  leaveClan: () => call<{ ok: true }>(`/players/${me()}/clan`, { method: 'DELETE' }),
+  removeMember: (memberId: string) =>
+    call<ClanDetail>(`/players/${me()}/clan/members/${encodeURIComponent(memberId)}`, { method: 'DELETE' }),
+  clan: (tag: string) => call<ClanDetail>(`/clans/${encodeURIComponent(tag)}?me=${me()}`),
+  searchClans: (q: string) => call<ClanSummary[]>(`/clans?q=${encodeURIComponent(q)}`),
+  topClans: (period: Period) => call<RankedClan[]>(`/clans/top?period=${period}&me=${me()}`),
 };
+
+export interface ClanInput {
+  name?: string;
+  description?: string;
+  color?: PlayerColor;
+}
+
+const json = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });

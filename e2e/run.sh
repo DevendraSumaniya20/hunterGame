@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: [DEVICE=<sim udid>] e2e/run.sh edge|runner|host   (server on :3000 and the app on a booted simulator must be running)
+# Usage: [DEVICE=<sim udid>] e2e/run.sh edge|clans|runner|host   (server on :3000 and the app on a booted simulator must be running)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 BOT_LOG=$(mktemp)
@@ -7,6 +7,9 @@ DEVICE=${DEVICE:-$(xcrun simctl list devices booted | grep -oE "[0-9A-F-]{36}" |
 case "${1:-}" in
   edge)
     maestro --device "$DEVICE" test e2e/flows/edge_cases.yaml
+    ;;
+  clans)
+    maestro --device "$DEVICE" test e2e/flows/clans.yaml
     ;;
   runner)
     npx tsx e2e/bot.ts host > "$BOT_LOG" 2>&1 &
@@ -24,5 +27,5 @@ case "${1:-}" in
     sleep 2
     maestro --device "$DEVICE" test e2e/flows/host_hunts.yaml
     ;;
-  *) echo "usage: e2e/run.sh edge|runner|host"; exit 1 ;;
+  *) echo "usage: e2e/run.sh edge|clans|runner|host"; exit 1 ;;
 esac

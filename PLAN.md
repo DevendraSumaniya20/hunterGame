@@ -25,6 +25,8 @@ shared/   @hunt/shared — types, socket event contracts, constants, haversine d
 server/   Node + TypeScript + socket.io
   domain/Room.ts          pure game rules (no socket code) — unit tested
   services/RoomManager.ts room registry, timers
+  data/                   SQLite schema, GameRepository (history/stats/leaderboard), ClanRepository
+  transport/http.ts       REST API under /api
   transport/socket.ts     event handlers, input validation, per-player views
 app/      React Native CLI (bare) + TypeScript, Apple HIG styling (PlatformColor, light/dark)
   src/data/        socket client + gameService (talks to server)
@@ -48,6 +50,9 @@ react-native-maps (Apple Maps on iOS, no key). Haptics via RN core `Vibration`.
 6. iOS build on simulator
 7. Maestro flows: host flow, runner-gets-caught flow (bot plays the other side)
 8. 3-simulator game: host + 2 runners, catch -> helper -> helper catches last runner
+9. Persistence (SQLite) + REST API: history, game detail, stats, leaderboard, profiles
+10. Tabs: Play, History, Leaderboard, Clans, Profile; stable secret player id (AsyncStorage)
+11. Clans: create, share code, join, search, top clans, owner tools
 
 All steps done.
 

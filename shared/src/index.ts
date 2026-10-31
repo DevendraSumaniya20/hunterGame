@@ -37,6 +37,8 @@ export interface PlayerView {
   id: string;
   name: string;
   color: PlayerColor;
+  /** clan share code, shown next to the name */
+  clanTag: string | null;
   role: Role;
   connected: boolean;
   /** null when the viewer is not allowed to see this player, or no fix yet */
@@ -137,6 +139,53 @@ export interface LeaderboardRow {
   value: number;
   games: number;
   isMe: boolean;
+}
+
+// ---- Clans ----
+
+export const CLAN_MAX_MEMBERS = 30;
+export const CLAN_NAME_LIMITS: [number, number] = [3, 24];
+export const CLAN_DESCRIPTION_MAX = 120;
+
+export type ClanRole = 'owner' | 'member';
+
+export interface ClanSummary {
+  /** 6-character share code */
+  tag: string;
+  name: string;
+  color: PlayerColor;
+  memberCount: number;
+  /** 3 per win + 1 per catch by current members in the period */
+  points: number;
+}
+
+export interface ClanMember {
+  /** public id, used to remove a member */
+  id: string;
+  name: string;
+  color: PlayerColor;
+  role: ClanRole;
+  games: number;
+  wins: number;
+  catches: number;
+  isMe: boolean;
+}
+
+export interface ClanDetail extends ClanSummary {
+  description: string;
+  createdAt: number;
+  games: number;
+  wins: number;
+  roster: ClanMember[];
+  /** viewer's role in this clan, null if not a member */
+  myRole: ClanRole | null;
+  /** viewer is in another clan, so cannot join this one */
+  inOtherClan: boolean;
+}
+
+export interface RankedClan extends ClanSummary {
+  rank: number;
+  isMine: boolean;
 }
 
 /** Sent in socket.io handshake `auth` so a reconnect keeps the same seat. */

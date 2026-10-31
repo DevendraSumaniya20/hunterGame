@@ -17,3 +17,11 @@ appId: com.dsumniya.huntinggame
           clearState: true
           permissions:
             all: allow
+      # Android's local-network ("nearby devices") prompt is not covered by `all: allow`.
+      - extendedWaitUntil:
+          visible: "Allow"
+          timeout: 8000
+          optional: true
+      - tapOn:
+          text: "Allow"
+          optional: true

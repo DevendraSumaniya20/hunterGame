@@ -18,6 +18,8 @@ socket, a real app or a real phone goes higher up.
 | Layer | Where | Runner | Time |
 |---|---|---|---|
 | Domain rules | `server/test/room*.test.ts` | node:test via tsx | < 1 s |
+| Persistence (SQLite in memory) | `server/test/repository.test.ts`, `clans.test.ts` | node:test | < 1 s |
+| REST API | `server/test/http.test.ts` | node:test + fetch + socket.io-client | ~6 s |
 | Room manager + timers | `server/test/roomManager*.test.ts` | node:test, `mock.timers` | < 1 s |
 | Socket integration | `server/test/socket.test.ts` | node:test + socket.io-client | ~3 s |
 | App store / UI | `app/__tests__/*` | jest (`@react-native/jest-preset`) | ~5 s |
@@ -28,9 +30,9 @@ socket, a real app or a real phone goes higher up.
 
 ```bash
 npm test                    # server + app unit/integration
-npm run test:e2e            # edge cases, runner flow, host flow (1 simulator + bot)
+npm run test:e2e            # edge cases, clans, runner flow (+ tabs), host flow (1 simulator + bot)
 e2e/multi.sh                # 3-simulator game (host + 2 runners)
-DEVICE=emulator-5554 e2e/run.sh runner   # same flows on Android
+DEVICE=emulator-5554 e2e/run.sh clans    # same flows on Android (game flows need a Maps key)
 ```
 
 E2E needs: `DEBUG=1 npm run server`, Metro (`npm run app`) and the app installed on the device.
@@ -77,6 +79,29 @@ E2E needs: `DEBUG=1 npm run server`, Metro (`npm run app`) and the app installed
 | S5 | Reconnect restores seat; second socket keeps player online | socket.test |
 | S6 | Fresh player gets empty `session` | socket.test |
 
+### History, stats, leaderboard (persistence + API)
+| ID | Case | Test |
+|---|---|---|
+| P1 | Finished game saved; each player's history from their own point of view | repository |
+| P2 | Game detail only for participants; never contains secret ids | repository, http |
+| P3 | Stats add up (games, wins, catches, times caught, best escape) | repository |
+| P4 | Leaderboards: hunters by catches, survivors by escapes; week excludes old games | repository, http |
+| P5 | Profile defaults, save, validation (name, colour, bad JSON, 1 KB body limit, bad id) | repository, http |
+| P6 | Secret ids never reach other players over the socket | socket.test |
+
+### Clans
+| ID | Case | Test |
+|---|---|---|
+| C1 | Create: owner, 6-char code, name 3–24 chars, description ≤ 120, colour, unique name (any case) | clans.test |
+| C2 | Join by code in any case; one clan per player; re-join own clan is a no-op; full at 30 | clans.test |
+| C3 | Owner leaving hands over to longest member; last member out deletes the clan | clans.test |
+| C4 | Only the owner removes members, never themselves | clans.test, http |
+| C5 | Owner edits name/description/colour; name clash rejected | clans.test |
+| C6 | Search by name or exact code; `%` and `_` are literal | clans.test |
+| C7 | Top clans: 3 per win + 1 per catch; week vs all time; marks your clan | clans.test, http |
+| C8 | Clan code shows next to the player in a game lobby | http |
+| C9 | UI: no-clan state, join by code (+ error), owner vs member actions, leave confirm, debounced search, top list, form validation | app clans.test |
+
 ### App
 | ID | Case | Test |
 |---|---|---|
@@ -88,6 +113,9 @@ E2E needs: `DEBUG=1 npm run server`, Metro (`npm run app`) and the app installed
 | A6 | Radar thresholds 49/50/149/150 m and no-signal | ui.test |
 | A7 | Result wording per role × winner | ui.test |
 | A8 | Clock formatting | App.test |
+| A9 | Profile prefs persist across restarts; name/colour sync, haptics local | profileStore.test |
+| A10 | History list, empty and error states; leaderboard switches board/period | screens.test |
+| A11 | Game title/subtitle wording | format.test |
 
 ### End to end
 | ID | Case | Flow |
@@ -96,6 +124,8 @@ E2E needs: `DEBUG=1 npm run server`, Metro (`npm run app`) and the app installed
 | E2 | Runner joins bot host, gets caught at chase start, result screen | runner_caught.yaml |
 | E3 | Host sets head start, bot joins, blindfold, walks onto runner, wins | host_hunts.yaml |
 | E4 | 3 devices: host catches Ravi → Ravi becomes helper → catches Mia | multi/*.yaml |
+| E5 | After a game: History row and detail, leaderboard, profile colour; relaunch keeps id, colour, history | runner_caught.yaml |
+| E6 | Clans: create, code, search, top list (yours), leave deletes empty clan (iOS + Android) | clans.yaml |
 
 ## Field test checklist (real phones)
 
@@ -116,3 +146,6 @@ Run with `DEBUG=1`; watch `curl <server>:3000/debug/rooms`.
 - Background location is not supported: phones must keep the app open.
 - Android map needs a Google Maps key (`MAPS_API_KEY` in `app/android/local.properties`).
 - Multi-simulator E2E can be flaky on the 3rd simulator (Maestro driver lag), not the app.
+- Android shows a "nearby devices" (local network) prompt because the dev server is on the LAN; the
+  launch flow accepts it. A server on the internet would not trigger it.
+- Player ids are random, not cryptographic (`Math.random`); fine for a game, use a CSPRNG for real accounts.

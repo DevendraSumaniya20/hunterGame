@@ -21,6 +21,7 @@ export interface Player {
   id: string;
   name: string;
   color: PlayerColor;
+  clanTag: string | null;
   role: Role;
   connected: boolean;
   location: LatLng | null;
@@ -42,11 +43,13 @@ export class Room {
     hostName: string,
     readonly settings: GameSettings = DEFAULT_SETTINGS,
     hostColor: PlayerColor = DEFAULT_COLOR,
+    hostClanTag: string | null = null,
   ) {
     this.players.set(hostId, {
       id: hostId,
       name: hostName,
       color: hostColor,
+      clanTag: hostClanTag,
       role: 'hunter',
       connected: true,
       location: null,
@@ -58,7 +61,7 @@ export class Room {
   }
 
   /** Adds a runner, or reconnects an existing player with the same id. */
-  join(id: string, name: string, color: PlayerColor = DEFAULT_COLOR) {
+  join(id: string, name: string, color: PlayerColor = DEFAULT_COLOR, clanTag: string | null = null) {
     const existing = this.players.get(id);
     if (existing) {
       existing.connected = true;
@@ -66,7 +69,7 @@ export class Room {
     }
     if (this.phase !== 'lobby') throw new GameError('Game already started');
     if (this.players.size >= MAX_PLAYERS) throw new GameError('Room is full');
-    this.players.set(id, { id, name, color, role: 'runner', connected: true, location: null });
+    this.players.set(id, { id, name, color, clanTag, role: 'runner', connected: true, location: null });
   }
 
   setConnected(id: string, connected: boolean) {

@@ -27,23 +27,29 @@ export class RoomManager {
     return code ? this.rooms.get(code) : undefined;
   }
 
-  create(hostId: string, name: string, settings: Partial<GameSettings> = {}, color?: PlayerColor): Room {
+  create(
+    hostId: string,
+    name: string,
+    settings: Partial<GameSettings> = {},
+    color?: PlayerColor,
+    clanTag: string | null = null,
+  ): Room {
     this.leave(hostId);
     let code: string;
     do {
       code = Array.from({ length: 5 }, () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]).join('');
     } while (this.rooms.has(code));
-    const room = new Room(code, hostId, name, clampSettings(settings), color);
+    const room = new Room(code, hostId, name, clampSettings(settings), color, clanTag);
     this.rooms.set(code, room);
     this.playerRoom.set(hostId, code);
     return room;
   }
 
-  join(playerId: string, code: string, name: string, color?: PlayerColor): Room {
+  join(playerId: string, code: string, name: string, color?: PlayerColor, clanTag: string | null = null): Room {
     const room = this.rooms.get(code);
     if (!room) throw new GameError('Room not found');
     if (this.roomOf(playerId) !== room) this.leave(playerId);
-    room.join(playerId, name, color);
+    room.join(playerId, name, color, clanTag);
     this.playerRoom.set(playerId, code);
     return room;
   }

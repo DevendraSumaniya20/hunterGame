@@ -1,11 +1,7 @@
-import { createHash } from 'node:crypto';
 import type { CatchEvent, RoomView } from '@hunt/shared';
+import { publicId } from '../domain/ids';
 
-/**
- * Player ids are secrets (they unlock that player's profile and history), so other players only ever
- * see a one-way hash of them.
- */
-export const publicId = (secretId: string) => createHash('sha256').update(secretId).digest('base64url').slice(0, 12);
+export { publicId };
 
 export const publicCatch = (e: CatchEvent): CatchEvent => ({ ...e, runnerId: publicId(e.runnerId), byId: publicId(e.byId) });
 

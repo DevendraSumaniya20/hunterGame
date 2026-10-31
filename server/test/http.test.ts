@@ -4,17 +4,20 @@ import type { AddressInfo } from 'node:net';
 import { after, test } from 'node:test';
 import { io as connect, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, GameDetail, GameSummary, LeaderboardRow, Profile, RoomView, ServerToClientEvents } from '@hunt/shared';
+import { ClanRepository } from '../src/data/ClanRepository';
 import { openDb } from '../src/data/db';
 import { GameRepository } from '../src/data/GameRepository';
 import { createApi } from '../src/transport/http';
 import { attachSocket } from '../src/transport/socket';
 
-const repo = new GameRepository(openDb(':memory:'));
-const api = createApi(repo);
+const db = openDb(':memory:');
+const repo = new GameRepository(db);
+const clans = new ClanRepository(db);
+const api = createApi(repo, clans);
 const http = createServer(async (req, res) => {
   if (!(await api(req, res))) res.writeHead(404).end();
 });
-const { io } = attachSocket(http, repo);
+const { io } = attachSocket(http, { games: repo, clans });
 http.listen(0);
 const base = `http://localhost:${(http.address() as AddressInfo).port}`;
 const sockets: Socket[] = [];
@@ -68,4 +71,48 @@ test('a finished game is saved and shows in history, detail and leaderboard', as
   const board = (await get<LeaderboardRow[]>('/api/leaderboard?board=hunters&period=week&me=api-host-01')).body;
   assert.deepEqual(board.map(r => [r.name, r.value, r.isMe]), [['Hana', 1, true]]);
   assert.equal((await get<Profile>('/api/players/api-host-01')).body.stats.wins, 1);
+});
+
+const send = async (method: string, path: string, body?: unknown) => {
+  const r = await fetch(base + path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
+  return { status: r.status, body: await r.json() };
+};
+
+test('clan lifecycle over the API: create, share code, search, join, tag in game, remove, leave', async () => {
+  const created = await send('POST', '/api/players/clan-owner-01/clan', { name: 'Night Owls', color: '#AF52DE' });
+  assert.equal(created.status, 200);
+  const tag: string = created.body.tag;
+  assert.equal((await send('POST', '/api/players/clan-owner-01/clan', { name: 'Again' })).status, 409);
+  assert.equal((await send('POST', '/api/players/clan-other-01/clan', { name: 'x' })).status, 400);
+  assert.equal((await send('POST', '/api/players/clan-other-01/clan', ['not', 'object'])).status, 400);
+
+  assert.deepEqual((await get<any[]>('/api/clans?q=owls')).body.map(c => c.tag), [tag]);
+  assert.equal((await get(`/api/clans/${tag.toLowerCase()}`)).status, 200);
+  assert.equal((await get('/api/clans/ZZZZZZ')).status, 404);
+
+  const joined = await send('POST', '/api/players/clan-member-01/clan/join', { tag });
+  assert.equal(joined.body.memberCount, 2);
+  assert.equal((await send('POST', '/api/players/clan-member-02/clan/join', { tag: 'NOPE00' })).status, 404);
+
+  // Clan tag rides along into live games.
+  const s: Socket<ServerToClientEvents, ClientToServerEvents> = connect(base, { auth: { playerId: 'clan-member-01' }, forceNew: true });
+  sockets.push(s);
+  const room = await new Promise<RoomView>((res, rej) =>
+    s.emit('room:create', { name: 'Mo' }, r => (r.ok ? res(r.data) : rej(new Error(r.error)))),
+  );
+  assert.equal(room.players[0].clanTag, tag);
+  s.emit('room:leave');
+
+  const top = (await get<any[]>('/api/clans/top?period=all&me=clan-member-01')).body;
+  assert.ok(top.some(c => c.tag === tag && c.isMine));
+
+  const memberId = joined.body.roster.find((m: any) => m.isMe).id;
+  assert.equal((await send('DELETE', `/api/players/clan-member-01/clan/members/${memberId}`)).status, 403);
+  assert.equal((await send('PATCH', '/api/players/clan-owner-01/clan', { description: 'Hoo' })).body.description, 'Hoo');
+  assert.equal((await send('DELETE', `/api/players/clan-owner-01/clan/members/${memberId}`)).body.memberCount, 1);
+  assert.equal((await get('/api/players/clan-member-01/clan')).body, null);
+
+  assert.equal((await send('DELETE', '/api/players/clan-owner-01/clan')).status, 200);
+  assert.equal((await get(`/api/clans/${tag}`)).status, 404, 'last member leaving deletes the clan');
+  assert.equal((await send('DELETE', '/api/players/clan-owner-01/clan')).status, 404);
 });

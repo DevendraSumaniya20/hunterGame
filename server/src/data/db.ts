@@ -32,6 +32,21 @@ CREATE TABLE IF NOT EXISTS game_players (
   PRIMARY KEY (game_id, player_id)
 );
 CREATE INDEX IF NOT EXISTS game_players_player ON game_players(player_id);
+CREATE TABLE IF NOT EXISTS clans (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  tag         TEXT NOT NULL UNIQUE,      -- share code
+  name        TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  description TEXT NOT NULL DEFAULT '',
+  color       TEXT NOT NULL,
+  created_at  INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS clan_members (
+  player_id TEXT PRIMARY KEY,            -- one clan per player
+  clan_id   INTEGER NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  role      TEXT NOT NULL,               -- owner | member
+  joined_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS clan_members_clan ON clan_members(clan_id);
 CREATE INDEX IF NOT EXISTS games_ended_at ON games(ended_at);
 `;
 

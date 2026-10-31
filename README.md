@@ -14,8 +14,11 @@ Hunters win by catching everyone; runners win if anyone is free when the clock r
 - Live map: hunters see runners after the head start; runners get a distance radar
 - Server-side catch detection; caught runners switch teams and get the hunter map
 - Catch alerts with vibration, reconnect keeps your seat, server restart sends players home cleanly
-- Tabs: Play, History (per-game detail), Leaderboard (hunters / survivors, week / all time), Profile
-  (name, pin colour, stats, haptics, how to play)
+- Tabs: Play, History (per-game detail), Leaderboard (hunters / survivors, week / all time), Clans, Profile
+  (name, pin colour, games played, wins, catches, best escape, haptics, how to play)
+- Clans: create, share a 6-character code, join by code, search by name or code, top clans
+  (3 points per win + 1 per catch, this week / all time), owner can edit and remove members,
+  ownership passes on when the owner leaves; clan code shows next to players in game lobbies
 - Secret per-install player id; other players only ever see a hash of it
 
 ## Run

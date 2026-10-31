@@ -10,6 +10,6 @@
     "app": "npm start --prefix app",
     "test": "npm test -w server && npm test --prefix app -- --watchAll=false",
     "typecheck": "npm run typecheck -w server && npm run typecheck --prefix app",
-    "test:e2e": "e2e/run.sh edge && e2e/run.sh runner && e2e/run.sh host"
+    "test:e2e": "e2e/run.sh edge && e2e/run.sh clans && e2e/run.sh runner && e2e/run.sh host"
   }
 }

@@ -1,6 +1,7 @@
 import type { Server as HttpServer } from 'node:http';
 import { Server, Socket } from 'socket.io';
 import { Ack, ClientToServerEvents, LatLng, PLAYER_COLORS, PlayerColor, ServerToClientEvents } from '@hunt/shared';
+import type { ClanRepository } from '../data/ClanRepository';
 import type { GameRepository } from '../data/GameRepository';
 import { GameError, Room } from '../domain/Room';
 import { RoomManager } from '../services/RoomManager';
@@ -13,7 +14,12 @@ const BROADCAST_MS = 250;
 // Every socket of a player joins this room, so "is this player still online?" is a set lookup.
 const playerChannel = (playerId: string) => `player:${playerId}`;
 
-export function attachSocket(http: HttpServer, repo?: GameRepository) {
+export interface SocketDeps {
+  games?: GameRepository;
+  clans?: ClanRepository;
+}
+
+export function attachSocket(http: HttpServer, { games, clans }: SocketDeps = {}) {
   const io = new Server<ClientToServerEvents, ServerToClientEvents, {}, { playerId: string }>(http, {
     cors: { origin: '*' },
   });
@@ -41,7 +47,7 @@ export function attachSocket(http: HttpServer, repo?: GameRepository) {
       }),
     onEnded: room => {
       try {
-        repo?.saveGame(room);
+        games?.saveGame(room);
       } catch (e) {
         console.error('Could not save game', room.code, e); // never break the live game over storage
       }
@@ -83,7 +89,8 @@ export function attachSocket(http: HttpServer, repo?: GameRepository) {
     socket.on('room:create', (p, ack) =>
       handle(ack, () => {
         const switchRooms = roomSwitcher();
-        const room = manager.create(playerId, cleanName(p?.name), p?.settings ?? {}, cleanColor(p?.color));
+        const clanTag = clans?.tagOf(playerId) ?? null;
+        const room = manager.create(playerId, cleanName(p?.name), p?.settings ?? {}, cleanColor(p?.color), clanTag);
         debug(`create ${room.code} ${playerId} ${p.name}`);
         switchRooms(room);
         return publicView(room.viewFor(playerId));
@@ -94,7 +101,8 @@ export function attachSocket(http: HttpServer, repo?: GameRepository) {
       handle(ack, () => {
         const code = String(p?.code ?? '').trim().toUpperCase();
         const switchRooms = roomSwitcher();
-        const room = manager.join(playerId, code, cleanName(p?.name), cleanColor(p?.color));
+        const clanTag = clans?.tagOf(playerId) ?? null;
+        const room = manager.join(playerId, code, cleanName(p?.name), cleanColor(p?.color), clanTag);
         debug(`join ${room.code} ${playerId} ${p.name}`);
         switchRooms(room);
         manager.setConnected(playerId, true); // broadcasts the new player to the lobby

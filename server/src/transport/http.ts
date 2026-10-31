@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Board, PLAYER_COLORS, Period, PlayerColor } from '@hunt/shared';
+import { ClanError, ClanRepository } from '../data/ClanRepository';
 import type { GameRepository } from '../data/GameRepository';
 
 const PLAYER_ID = /^[\w-]{8,64}$/;
@@ -14,7 +15,7 @@ class HttpError extends Error {
 }
 
 /** REST API under /api. Returns false when the request is not an API route. */
-export function createApi(repo: GameRepository) {
+export function createApi(repo: GameRepository, clans: ClanRepository) {
   const routes: [string, RegExp, Handler][] = [
     ['GET', /^\/api\/players\/([^/]+)$/, m => repo.profile(playerId(m[1]))],
     [
@@ -40,6 +41,39 @@ export function createApi(repo: GameRepository) {
       /^\/api\/players\/([^/]+)\/games\/(\d+)$/,
       m => repo.gameDetail(playerId(m[1]), Number(m[2])) ?? notFound(),
     ],
+    // ---- clans: actions on "my clan" use the secret id in the path, like the profile ----
+    ['GET', /^\/api\/players\/([^/]+)\/clan$/, m => clans.myClan(playerId(m[1]))],
+    ['POST', /^\/api\/players\/([^/]+)\/clan$/, async (m, _u, req) => clans.create(playerId(m[1]), await readObject(req))],
+    ['PATCH', /^\/api\/players\/([^/]+)\/clan$/, async (m, _u, req) => clans.update(playerId(m[1]), await readObject(req))],
+    [
+      'POST',
+      /^\/api\/players\/([^/]+)\/clan\/join$/,
+      async (m, _u, req) => clans.join(playerId(m[1]), (await readObject(req)).tag),
+    ],
+    [
+      'DELETE',
+      /^\/api\/players\/([^/]+)\/clan$/,
+      m => {
+        clans.leave(playerId(m[1]));
+        return { ok: true };
+      },
+    ],
+    [
+      'DELETE',
+      /^\/api\/players\/([^/]+)\/clan\/members\/([\w-]{1,32})$/,
+      m => clans.removeMember(playerId(m[1]), m[2]),
+    ],
+    ['GET', /^\/api\/clans$/, (_m, url) => clans.search(url.searchParams.get('q'))],
+    [
+      'GET',
+      /^\/api\/clans\/top$/,
+      (_m, url) => clans.top(url.searchParams.get('period') === 'week' ? 'week' : 'all', optionalId(url)),
+    ],
+    [
+      'GET',
+      /^\/api\/clans\/([A-Za-z0-9]{6})$/,
+      (m, url) => clans.detail(m[1], optionalId(url)) ?? notFound(),
+    ],
     [
       'GET',
       /^\/api\/leaderboard$/,
@@ -61,8 +95,9 @@ export function createApi(repo: GameRepository) {
       const data = await route[2](url.pathname.match(route[1])!, url, req);
       send(res, 200, data);
     } catch (e) {
-      if (!(e instanceof HttpError)) console.error(e);
-      send(res, e instanceof HttpError ? e.status : 500, { error: e instanceof HttpError ? e.message : 'Server error' });
+      const known = e instanceof HttpError || e instanceof ClanError;
+      if (!known) console.error(e);
+      send(res, known ? e.status : 500, { error: known ? e.message : 'Server error' });
     }
     return true;
   };
@@ -72,6 +107,18 @@ function playerId(raw: string): string {
   const id = decodeURIComponent(raw);
   if (!PLAYER_ID.test(id)) throw new HttpError(400, 'Invalid player id');
   return id;
+}
+
+/** `?me=` lets lists mark the viewer's own row; ignored if malformed. */
+function optionalId(url: URL): string | undefined {
+  const me = url.searchParams.get('me');
+  return me && PLAYER_ID.test(me) ? me : undefined;
+}
+
+async function readObject(req: IncomingMessage): Promise<Record<string, unknown>> {
+  const body = await readJson(req);
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new HttpError(400, 'Expected a JSON object');
+  return body as Record<string, unknown>;
 }
 
 function notFound(): never {
